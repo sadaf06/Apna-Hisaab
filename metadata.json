@@ -1,0 +1,6 @@
+{
+  "name": "Apna Hisaab",
+  "description": "Daily expense tracker with Aaj, Hisaab, and Kahani screens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

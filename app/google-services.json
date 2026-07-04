@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1096486727523",
+    "project_id": "apna-hisaab-2c830",
+    "storage_bucket": "apna-hisaab-2c830.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096486727523:android:967ebcecfbbf1c4f146d56",
+        "android_client_info": {
+          "package_name": "com.creationx.apnahisaab"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1096486727523-vlttnla2qrkv2o4e9ljv6t2l7g7m6gp8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBswtrq5wRpLZYYJka4uswCyD-IJ5T_Eg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1096486727523-vlttnla2qrkv2o4e9ljv6t2l7g7m6gp8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
