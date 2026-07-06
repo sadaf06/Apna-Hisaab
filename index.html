@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>Apna Hisaab — Ek Line Likho, Baaki AI Samjhe</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+    :root {
+        --purple: #8b6cff;
+        --purple-deep: #6a3ff0;
+        --teal: #2dd8c4;
+        --amber: #ffb454;
+        --coral: #ff5d7a;
+        --bg: #07060c;
+        --glass-border: rgba(255,255,255,0.08);
+        --glass-bg: rgba(255,255,255,0.035);
+        --text-dim: #93899f;
+        --safe-bottom: env(safe-area-inset-bottom, 10px);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scrollbar-width:none; }
+    html::-webkit-scrollbar { display:none; }
+    body {
+        font-family:'Inter',sans-serif; background:var(--bg); color:#fff;
+        overflow-x:hidden; line-height:1.4; position:relative;
+    }
+    .grain {
+        position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .cursor-glow {
+        position:fixed; width:460px; height:460px; border-radius:50%; pointer-events:none; z-index:1;
+        background:radial-gradient(circle, rgba(139,108,255,0.09), transparent 70%);
+        transform:translate(-50%,-50%); left:50%; top:50%; filter:blur(10px);
+    }
+
+    /* NAV */
+    nav {
+        position:fixed; top:15px; left:50%; transform:translateX(-50%);
+        width:92%; max-width:920px; padding:10px 10px 10px 22px;
+        background:rgba(9,7,15,0.92); backdrop-filter:blur(20px);
+        border:1px solid var(--glass-border); border-radius:50px;
+        display:flex; justify-content:space-between; align-items:center;
+        z-index:1000; transition:padding .3s ease, background .3s ease;
+        isolation:isolate;
+    }
+    .logo { display:flex; align-items:center; gap:8px; font-weight:900; font-size:.95rem; }
+    .logo .mark{
+        width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+        background:linear-gradient(135deg,var(--purple),var(--teal)); color:#07060c; font-family:'Fraunces',serif; font-size:.8rem; font-weight:700;
+    }
+    .nav-links-desktop { display:none; }
+    .nav-cta { background:linear-gradient(90deg,var(--purple),var(--purple-deep)); color:#fff !important; padding:9px 20px; border-radius:20px; font-weight:700 !important; box-shadow:0 6px 20px rgba(139,108,255,0.3); }
+    .hamburger { background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer; padding:6px 10px; }
+
+    @media (min-width:769px) {
+        .nav-links-desktop { display:flex; gap:26px; align-items:center; }
+        .nav-links-desktop a { color:#9088a3; text-decoration:none; font-size:.85rem; font-weight:500; transition:color .3s; }
+        .nav-links-desktop a:hover { color:#fff; }
+        .hamburger { display:none; }
+    }
+    .mobile-menu {
+        position:fixed; inset:0; background:rgba(6,5,10,0.98); backdrop-filter:blur(30px);
+        z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:28px;
+        opacity:0; pointer-events:none; transition:opacity .4s ease;
+    }
+    .mobile-menu.active { opacity:1; pointer-events:all; }
+    .mobile-menu a { color:#fff; text-decoration:none; font-size:1.8rem; font-weight:700; }
+
+    /* HERO */
+    #hero {
+        min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center;
+        text-align:center; position:relative; overflow:hidden; padding:110px 20px 0;
+    }
+    .orb { position:absolute; border-radius:50%; filter:blur(60px); z-index:0; opacity:.5; }
+    .orb1 { width:500px; height:500px; background:radial-gradient(circle, rgba(139,108,255,0.35), transparent 70%); top:8%; left:-10%; animation:float1 14s ease-in-out infinite; }
+    .orb2 { width:420px; height:420px; background:radial-gradient(circle, rgba(45,216,196,0.28), transparent 70%); bottom:-10%; right:-8%; animation:float2 16s ease-in-out infinite; }
+    @keyframes float1 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,60px);} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(-50px,-40px);} }
+
+    .hero-content { position:relative; z-index:2; }
+    .hero-pre {
+        display:inline-flex; align-items:center; gap:8px; font-size:.78rem; color:var(--teal); font-weight:700;
+        letter-spacing:2px; text-transform:uppercase; margin-bottom:22px; opacity:0; transform:translateY(20px);
+        background:rgba(45,216,196,0.08); border:1px solid rgba(45,216,196,0.25); padding:7px 16px; border-radius:100px;
+    }
+    .hero-pre .pulse { width:6px; height:6px; border-radius:50%; background:var(--teal); animation:pulse 1.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(1.4);} }
+
+    .masked-text-wrapper { position:relative; margin-bottom:22px; }
+    .masked-text {
+        font-size:clamp(2.8rem, 12vw, 8.5rem); font-weight:900; line-height:.92;
+        color:transparent; -webkit-text-stroke:2px rgba(255,255,255,0.28); position:relative; z-index:2; letter-spacing:-2px;
+    }
+    .masked-bg {
+        position:absolute; top:0; left:0; width:100%; height:100%;
+        background:linear-gradient(135deg,var(--purple),var(--teal),var(--coral));
+        background-size:100% 300%; background-position:0% 100%;
+        -webkit-background-clip:text; background-clip:text; color:transparent; z-index:1; opacity:0;
+    }
+    .hero-sub { font-size:1.05rem; color:var(--text-dim); max-width:420px; margin:0 auto 34px; opacity:0; transform:translateY(20px); }
+    .hero-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; opacity:0; transform:translateY(20px); }
+    .hero-cta {
+        display:inline-flex; align-items:center; gap:8px; padding:16px 34px; font-size:.95rem; font-weight:700; color:#07060c;
+        background:#fff; border-radius:50px; text-decoration:none; transition:transform .3s, box-shadow .3s; position:relative; overflow:hidden;
+    }
+    .hero-cta:hover { transform:scale(1.05); box-shadow:0 14px 40px rgba(255,255,255,0.2); }
+    .hero-cta-ghost {
+        display:inline-flex; align-items:center; gap:8px; padding:16px 26px; font-size:.95rem; font-weight:600; color:#fff;
+        border:1px solid var(--glass-border); border-radius:50px; text-decoration:none; transition:all .3s; background:var(--glass-bg);
+    }
+    .hero-cta-ghost:hover { border-color:rgba(139,108,255,0.5); background:rgba(139,108,255,0.08); }
+
+    .trust-row { display:flex; gap:20px; justify-content:center; margin-top:26px; flex-wrap:wrap; opacity:0; }
+    .trust-row span { font-size:.75rem; color:var(--text-dim); font-weight:600; }
+
+    .scroll-cue { position:absolute; bottom:36px; left:50%; transform:translateX(-50%); opacity:.4; font-size:.75rem; text-align:center; z-index:1; }
+    .scroll-cue div { width:18px; height:18px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(45deg); margin:14px auto 0; animation:bounce 2s infinite; }
+    @keyframes bounce { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(-10px);} }
+
+    /* PHONE MOCKUP SYSTEM */
+    .pin-wrapper { height:200vh; position:relative; display:flex; justify-content:center; align-items:flex-start; padding-top:20px; isolation:isolate; }
+    .pin-section {
+        position:relative; width:100%; height:100vh; height:100dvh;
+        display:flex; justify-content:center; align-items:center; overflow:hidden;
+        background-color:var(--bg);
+        background-image:radial-gradient(circle at center, #150a28 0%, var(--bg) 100%);
+        z-index:10; isolation:isolate;
+    }
+    .phone-frame {
+        width:92vw; max-width:360px; height:88vh; max-height:720px; background:#0a0910; border-radius:44px;
+        border:5px solid #201c2c; position:relative; overflow:hidden;
+        box-shadow:0 30px 90px rgba(0,0,0,0.9), 0 0 0 1px var(--glass-border), 0 0 80px rgba(139,108,255,0.18);
+        display:flex; flex-direction:column;
+    }
+    .notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:110px; height:26px; background:#000; border-bottom-left-radius:16px; border-bottom-right-radius:16px; z-index:10; }
+
+    .app-topbar { padding:38px 15px 12px; display:flex; justify-content:space-between; align-items:center; background:#0f0d16; border-bottom:1px solid var(--glass-border); flex-shrink:0; }
+    .user-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--teal)); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.7rem; color:#07060c; }
+    .status-text { font-size:.6rem; color:#888; display:flex; align-items:center; gap:4px; }
+    .app-title { font-weight:800; font-size:.85rem; }
+
+    .screen-body { flex:1; overflow-y:auto; padding:16px; background:linear-gradient(180deg, #0f0d16 0%, #170a28 100%); display:flex; flex-direction:column; gap:14px; scrollbar-width:none; }
+    .screen-body::-webkit-scrollbar { display:none; }
+
+    .greeting-title { font-size:1.05rem; font-weight:800; }
+    .greeting-sub { font-size:.78rem; color:#888; margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .streak-badge { background:rgba(139,108,255,0.2); color:#d1baff; padding:2px 8px; border-radius:10px; font-size:.68rem; font-weight:700; }
+
+    .expense-hero-card { background:var(--glass-bg); border:1px solid var(--glass-border); padding:20px; border-radius:20px; text-align:center; }
+    .ehc-label { font-size:.72rem; color:#888; margin-bottom:5px; }
+    .ehc-amount { font-size:2.3rem; font-weight:900; color:var(--teal); }
+    .ehc-lock { font-size:.68rem; color:var(--purple); margin-top:5px; display:flex; align-items:center; justify-content:center; gap:5px; }
+
+    .input-area { display:flex; flex-direction:column; gap:10px; }
+    .input-box { background:var(--glass-bg); border:1px solid var(--glass-border); padding:12px; border-radius:12px; font-size:.82rem; color:#fff; min-height:44px; display:flex; align-items:center; }
+    .cursor-blink { display:inline-block; width:2px; height:.9rem; background:var(--teal); margin-left:2px; animation:blink .8s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+    .mood-selector { display:flex; justify-content:space-between; padding:0 8px; }
+    .mood-btn { font-size:1.15rem; background:none; border:none; cursor:pointer; opacity:.5; transition:all .2s; }
+    .mood-btn.active { opacity:1; transform:scale(1.2); }
+
+    .action-btn { background:linear-gradient(90deg,var(--purple),var(--purple-deep)); color:#fff; border:none; padding:14px; border-radius:12px; font-weight:700; font-size:.88rem; cursor:pointer; width:100%; opacity:0; transform:scale(.8); }
+
+    .transaction-list { display:flex; flex-direction:column; gap:8px; }
+    .t-card { background:var(--glass-bg); border:1px solid var(--glass-border); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; opacity:0; transform:translateY(20px); }
+    .t-left { display:flex; align-items:center; gap:10px; }
+    .t-icon { font-size:1.15rem; }
+    .t-details h4 { font-size:.78rem; font-weight:600; }
+    .t-details p { font-size:.63rem; color:#888; }
+    .t-amount { font-weight:800; font-size:.88rem; color:var(--coral); }
+
+    .kahani-header { text-align:center; margin-bottom:6px; }
+    .kahani-title { font-size:1.05rem; font-weight:800; }
+
+    .stat-card { background:var(--glass-bg); border:1px solid var(--glass-border); padding:15px; border-radius:15px; }
+    .stat-row { display:flex; justify-content:space-between; margin-bottom:8px; font-size:.78rem; color:#888; }
+    .stat-row span:last-child { color:#fff; font-weight:700; }
+    .progress-container { width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; margin-top:5px; }
+    .progress-fill { width:0%; height:100%; background:linear-gradient(90deg,var(--purple),var(--teal)); border-radius:10px; }
+
+    .mood-tracker { display:flex; justify-content:space-between; margin-top:10px; }
+    .mood-dot { width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.1); opacity:0; transform:scale(0); }
+
+    .gen-btn { background:var(--glass-bg); border:1px solid var(--purple); color:var(--purple); padding:12px; border-radius:12px; font-weight:700; font-size:.88rem; width:100%; text-align:center; margin-top:auto; opacity:0; transform:translateY(20px); }
+
+    /* SAPNA / GOALS SCREEN */
+    .sapna-card { background:var(--glass-bg); border:1px solid var(--glass-border); padding:20px; border-radius:20px; text-align:center; position:relative; }
+    .ring-wrap { position:relative; width:120px; height:120px; margin:10px auto; }
+    .ring-wrap svg { transform:rotate(-90deg); }
+    .ring-bg { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+    .ring-fill { fill:none; stroke:url(#ringGrad); stroke-width:10; stroke-linecap:round; stroke-dasharray:314; stroke-dashoffset:314; }
+    .ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .ring-center .pct { font-size:1.3rem; font-weight:900; color:#fff; }
+    .ring-center .lbl { font-size:.62rem; color:#888; margin-top:2px; }
+    .sapna-name { font-weight:800; font-size:.95rem; margin-top:8px; }
+    .sapna-amt { font-size:.75rem; color:#888; margin-top:4px; }
+    .sapna-amt b { color:var(--teal); }
+    .confetti-canvas { position:absolute; inset:0; pointer-events:none; z-index:5; }
+    .celebrate-badge {
+        display:inline-flex; align-items:center; gap:6px; background:rgba(255,180,84,0.12); border:1px solid rgba(255,180,84,0.4);
+        color:var(--amber); font-size:.7rem; font-weight:700; padding:6px 14px; border-radius:100px; margin-top:14px; opacity:0; transform:scale(.7);
+    }
+    .other-goals { display:flex; flex-direction:column; gap:8px; margin-top:auto; }
+    .mini-goal { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; opacity:0; transform:translateY(14px); }
+    .mini-goal .name { font-size:.75rem; font-weight:600; }
+    .mini-goal .pct { font-size:.72rem; color:var(--teal); font-weight:700; }
+
+    @media (min-width:769px) {
+        .phone-frame { width:360px; height:720px; }
+        .pin-wrapper { padding-top:0; }
+    }
+
+    /* SECTIONS */
+    .std-section { padding:90px 20px; position:relative; z-index:1; isolation:isolate; background-color:var(--bg); }
+    .container { max-width:1200px; margin:0 auto; }
+    .section-tag { color:var(--teal); font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; text-align:center; }
+    .section-title { font-size:clamp(1.8rem, 5vw, 3rem); font-weight:800; text-align:center; margin-bottom:44px; letter-spacing:-1px; }
+    .gradient-text { background:linear-gradient(135deg,var(--purple) 0%,var(--teal) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .features-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:640px; margin:0 auto; }
+    .feat-card {
+        background:var(--glass-bg); border:1px solid var(--glass-border); padding:22px; border-radius:20px;
+        opacity:0; transform:translateY(30px); transition:transform .15s ease, border-color .3s;
+    }
+    .feat-card:hover { border-color:rgba(139,108,255,0.4); }
+    .feat-card .ico {
+        width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+        background:linear-gradient(135deg, rgba(139,108,255,0.22), rgba(45,216,196,0.14)); margin-bottom:12px;
+    }
+    .feat-card h3 { font-size:.98rem; margin:0 0 6px; font-weight:700; }
+    .feat-card p { color:#888; font-size:.8rem; line-height:1.5; }
+    @media (min-width:769px) { .features-grid { grid-template-columns:repeat(3,1fr); max-width:920px; } }
+
+    .overview-grid { display:grid; grid-template-columns:1fr; gap:14px; max-width:1100px; margin:0 auto; }
+    .ov-card {
+        background:var(--glass-bg); border:1px solid var(--glass-border); padding:20px; border-radius:18px;
+        transition:transform .2s ease, border-color .3s; display:flex; flex-direction:column; gap:8px;
+    }
+    .ov-card:hover { border-color:rgba(139,108,255,0.45); transform:translateY(-3px); }
+    .ov-ico {
+        width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+        background:linear-gradient(135deg, rgba(139,108,255,0.22), rgba(45,216,196,0.14));
+    }
+    .ov-card h3 { font-size:.92rem; font-weight:700; }
+    .ov-card p { font-size:.78rem; color:#8b8296; line-height:1.5; }
+    @media (min-width:640px) { .overview-grid { grid-template-columns:1fr 1fr; } }
+    @media (min-width:1000px) { .overview-grid { grid-template-columns:1fr 1fr 1fr; } }
+
+    #cta { text-align:center; background:linear-gradient(to top, #170a28, transparent); padding:70px 20px 110px; position:relative; }
+    .cta-btn {
+        display:inline-flex; align-items:center; gap:10px; margin-top:24px; padding:19px 42px; font-size:1.05rem; font-weight:700; color:#fff;
+        background:linear-gradient(90deg,var(--purple),var(--purple-deep)); border-radius:50px; text-decoration:none;
+        box-shadow:0 10px 40px rgba(139,108,255,0.4); opacity:0; transform:scale(.8); position:relative; overflow:hidden;
+    }
+    footer { text-align:center; padding:26px; color:#444; font-size:.8rem; position:relative; z-index:1; }
+    #globalConfetti { position:fixed; inset:0; z-index:9999; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<canvas id="globalConfetti"></canvas>
+
+<nav>
+    <div class="logo"><div class="mark">AH</div>Apna Hisaab</div>
+    <div class="nav-links-desktop">
+        <a href="#wrapper-aaj">Aaj</a>
+        <a href="#wrapper-kahani">Kahani</a>
+        <a href="#wrapper-sapna">Sapna</a>
+        <a href="https://github.com/sadaf06/Apna-hisaab/releases/tag/Download" class="nav-cta" target="_blank" id="navDownload">⬇ Download</a>
+    </div>
+    <button class="hamburger" onclick="document.querySelector('.mobile-menu').classList.toggle('active')">☰</button>
+</nav>
+
+<div class="mobile-menu">
+    <a href="#wrapper-aaj" onclick="this.parentElement.classList.remove('active')">Aaj Screen</a>
+    <a href="#wrapper-kahani" onclick="this.parentElement.classList.remove('active')">Kahani Screen</a>
+    <a href="#wrapper-sapna" onclick="this.parentElement.classList.remove('active')">Sapna Screen</a>
+    <a href="https://github.com/sadaf06/Apna-hisaab/releases/tag/Download" target="_blank" style="color:var(--teal);">Download Now</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="hero-content">
+        <h2 class="hero-pre"><span class="pulse"></span>Hinglish Expense Tracker</h2>
+        <div class="masked-text-wrapper">
+            <h1 class="masked-text">APNA<br>HISAAB</h1>
+            <div class="masked-bg" id="masked-bg"></div>
+        </div>
+        <p class="hero-sub">Ek line likho, baaki AI samjhe. Boring forms bhool jao — bas bolo jaise dost se baat karte ho.</p>
+        <div class="hero-ctas">
+            <a href="https://github.com/sadaf06/Apna-hisaab/releases/tag/Download" target="_blank" class="hero-cta" id="heroDownload">⬇ Download Now</a>
+            <a href="https://github.com/sadaf06/Apna-Hisaab" target="_blank" class="hero-cta-ghost">GitHub ↗</a>
+        </div>
+        <div class="trust-row" id="trustRow">
+            <span>🆓 Free &amp; Open Source</span>
+            <span>📦 v1.0 APK</span>
+            <span>🔐 Firebase Secured</span>
+        </div>
+    </div>
+    <div class="scroll-cue">Scroll to run the app<div></div></div>
+</section>
+
+<!-- FULL APP OVERVIEW — every feature, before the phone demo -->
+<section class="std-section" id="overview">
+    <div class="container">
+        <div class="section-tag">Poori App, Ek Nazar Mein</div>
+        <h2 class="section-title">Apna Hisaab Mein <span class="gradient-text">Kya Kya Hai</span></h2>
+
+        <div class="overview-grid">
+            <div class="ov-card">
+                <div class="ov-ico">✍️</div>
+                <h3>Aaj Screen</h3>
+                <p>Roz ka home — ek line likho ya bolo, AI turant expense, saving, ya goal-update samajh ke add kar deta hai. Streak badge bhi dikhta hai.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🗣️</div>
+                <h3>Natural Hinglish Parsing</h3>
+                <p>"100 ki chai pi", "6000 rent diya" — jaise bolte ho waise likho. Gemini AI amount, category, item sab khud nikalta hai.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🎯</div>
+                <h3>Multi-Intent Detection</h3>
+                <p>Ek hi sentence mein multiple actions: "100 ki chai pi aur 500 bachaye" → expense bhi, saving bhi — dono alag se log honge.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🎙️</div>
+                <h3>Voice Input</h3>
+                <p>Type karne ka mann nahi? Mic dabao aur seedhe bolke entry daalo — hands-free hisaab.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">😊</div>
+                <h3>Mood Tracking</h3>
+                <p>Har entry ke saath apna mood bhi capture hota hai — Khush, Normal, Thaka, Stressed, Sad. Patterns time ke saath dikhte hain.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">📖</div>
+                <h3>Month ki Kahani</h3>
+                <p>Mahine ke end mein AI likhta hai tumhari apni kahani — spending aur mood dono ko milake ek warm, personal Hinglish summary.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🎯</div>
+                <h3>Sapna — Savings Goals</h3>
+                <p>Apne sapne set karo (Goa trip, naya phone), paisa bachao, aur progress ring se track karo — poora hone pe confetti celebration!</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">📊</div>
+                <h3>Category Limits</h3>
+                <p>Har category (Khana, Safar, Masti, Shopping) ka apna monthly budget target set karo — limit cross hone pe pata chal jaayega.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">💰</div>
+                <h3>Income Sources</h3>
+                <p>Salary, freelance, ya koi bhi income source track karo — alag se manage karo apni kamaai.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🔒</div>
+                <h3>Privacy PIN Lock</h3>
+                <p>Kamaai kisi se chhupani hai? 4-digit PIN se income visibility lock kar do, ek tap mein unlock.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🔔</div>
+                <h3>Daily Reminders</h3>
+                <p>Raat 9 baje gentle nudge notification, taaki hisaab likhna kabhi na chuke.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🌙</div>
+                <h3>Liquid Glass UI</h3>
+                <p>Modern glassmorphic dark theme, floating navbar pill, sheen aur blur effects — premium feel har screen pe.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🔐</div>
+                <h3>Secure Auth &amp; Sync</h3>
+                <p>Firebase Auth se login, Firestore se data sync — har device pe tumhara hisaab safe aur up-to-date.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">⚙️</div>
+                <h3>Settings &amp; Control</h3>
+                <p>Naam edit, password reset, logout, account delete — sab kuch ek jagah, apni marzi se control karo.</p>
+            </div>
+            <div class="ov-card">
+                <div class="ov-ico">🎉</div>
+                <h3>Celebration Moments</h3>
+                <p>Goal poora karne pe confetti burst — chhoti jeet ko bhi celebrate karne ka mauka.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SCREEN 1: AAJ -->
+<div class="pin-wrapper" id="wrapper-aaj">
+    <section class="pin-section" id="section-aaj">
+        <div class="phone-frame">
+            <div class="notch"></div>
+            <div class="app-topbar">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="user-avatar">SS</div>
+                    <div>
+                        <div class="app-title">Aaj</div>
+                        <div class="status-text">🟢 Online</div>
+                    </div>
+                </div>
+                <div style="color:#888;font-size:1.1rem;">⏻</div>
+            </div>
+            <div class="screen-body">
+                <div>
+                    <div class="greeting-title" id="greeting-text">Aaj ka hisaab dekhein!</div>
+                    <div class="greeting-sub">Monday, 6 July<span class="streak-badge">🔥 5 din streak</span></div>
+                </div>
+                <div class="expense-hero-card">
+                    <div class="ehc-label">Aaj ka Kharcha</div>
+                    <div class="ehc-amount">₹<span id="amount-count">0</span></div>
+                    <div class="ehc-lock">🔒 Tap to unlock kamaai</div>
+                </div>
+                <div class="input-area">
+                    <div class="input-box"><span id="typed-text-1"></span><span class="cursor-blink"></span></div>
+                    <div class="mood-selector">
+                        <button class="mood-btn">😭</button><button class="mood-btn">😔</button><button class="mood-btn">😐</button>
+                        <button class="mood-btn active">😊</button><button class="mood-btn">🤩</button>
+                    </div>
+                    <button class="action-btn" id="add-btn-1">Hisaab Likho 🚀</button>
+                </div>
+                <div class="transaction-list">
+                    <div class="t-card" id="t-1">
+                        <div class="t-left"><div class="t-icon">🏠</div><div class="t-details"><h4>Rent/EMI</h4><p>rent diya 6000</p></div></div>
+                        <div class="t-amount">-₹6000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- SCREEN 2: KAHANI -->
+<div class="pin-wrapper" id="wrapper-kahani">
+    <section class="pin-section" id="section-kahani">
+        <div class="phone-frame">
+            <div class="notch"></div>
+            <div class="app-topbar">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="user-avatar">SS</div>
+                    <div><div class="app-title">Month ki Kahani 📖</div><div class="status-text" id="gen-status">⏳ Waiting...</div></div>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="kahani-header"><div class="kahani-title">July 2026 Summary</div></div>
+                <div class="stat-card">
+                    <div style="font-size:.78rem;color:#888;margin-bottom:5px;">Total Spent</div>
+                    <div style="font-size:1.7rem;font-weight:900;color:var(--teal);">₹15,373</div>
+                    <div style="margin-top:15px;">
+                        <div class="stat-row"><span>Rent/EMI</span><span>84%</span></div>
+                        <div class="progress-container"><div class="progress-fill" id="p-rent"></div></div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <div class="stat-row"><span>Personal</span><span>₹1,150</span></div>
+                        <div class="progress-container"><div class="progress-fill" id="p-per"></div></div>
+                    </div>
+                </div>
+                <div class="stat-card" style="margin-top:10px;">
+                    <div style="font-size:.78rem;color:#888;margin-bottom:10px;">Mood — Last 30 Days</div>
+                    <div class="mood-tracker">
+                        <div class="mood-dot" style="background:#4ade80;"></div>
+                        <div class="mood-dot" style="background:#4ade80;"></div>
+                        <div class="mood-dot" style="background:#facc15;"></div>
+                        <div class="mood-dot" style="background:#4ade80;"></div>
+                        <div class="mood-dot" style="background:#f87171;"></div>
+                        <div class="mood-dot" style="background:#4ade80;"></div>
+                        <div class="mood-dot" style="background:#4ade80;"></div>
+                    </div>
+                </div>
+                <button class="gen-btn" id="gen-btn">Generate Karo ✨</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- SCREEN 3: SAPNA (Goals + Confetti celebration) -->
+<div class="pin-wrapper" id="wrapper-sapna">
+    <section class="pin-section" id="section-sapna">
+        <div class="phone-frame">
+            <div class="notch"></div>
+            <div class="app-topbar">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="user-avatar">SS</div>
+                    <div><div class="app-title">Sapna 🎯</div><div class="status-text">Goals tracker</div></div>
+                </div>
+            </div>
+            <div class="screen-body" style="position:relative;">
+                <canvas class="confetti-canvas" id="sapnaConfetti"></canvas>
+                <div class="sapna-card">
+                    <div class="ring-wrap">
+                        <svg viewBox="0 0 120 120" width="120" height="120">
+                            <defs>
+                                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#8b6cff"/>
+                                    <stop offset="100%" stop-color="#2dd8c4"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+                            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"></circle>
+                        </svg>
+                        <div class="ring-center"><div class="pct" id="ringPct">0%</div><div class="lbl">poora</div></div>
+                    </div>
+                    <div class="sapna-name">Goa Trip 🏖️</div>
+                    <div class="sapna-amt"><b>₹18,000</b> / ₹18,000 bacha liye</div>
+                    <div class="celebrate-badge" id="celebrateBadge">🎉 Sapna Poora Hua!</div>
+                </div>
+                <div class="other-goals">
+                    <div class="mini-goal" id="mg-1"><span class="name">📱 New Phone</span><span class="pct">42%</span></div>
+                    <div class="mini-goal" id="mg-2"><span class="name">💍 Emergency Fund</span><span class="pct">67%</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- FEATURES -->
+<section class="std-section" id="features">
+    <div class="container">
+        <div class="section-tag">Core Features</div>
+        <h2 class="section-title">AI Jo Tumhari <span class="gradient-text">Bhasha Samjhe</span></h2>
+        <div class="features-grid">
+            <div class="feat-card"><div class="ico">🗣️</div><h3>Natural Language</h3><p>"100 ki chai pi" likho, AI khud samajh jayega.</p></div>
+            <div class="feat-card"><div class="ico">🎯</div><h3>Multi-Intent</h3><p>Ek sentence me expense aur saving dono log honge.</p></div>
+            <div class="feat-card"><div class="ico">😊</div><h3>Mood Tracking</h3><p>Har entry ke saath apna mood capture hota hai.</p></div>
+            <div class="feat-card"><div class="ico">📖</div><h3>Month ki Kahani</h3><p>AI generated emotional summary padho.</p></div>
+            <div class="feat-card"><div class="ico">🎙️</div><h3>Voice Input</h3><p>Type karne ka mann nahi? Bol ke bhi entry daal do.</p></div>
+            <div class="feat-card"><div class="ico">🔒</div><h3>Privacy PIN Lock</h3><p>Kamaai chhupao 4-digit PIN se, ek tap mein.</p></div>
+            <div class="feat-card"><div class="ico">🎯</div><h3>Category Limits</h3><p>Har category ka apna budget target set karo.</p></div>
+            <div class="feat-card"><div class="ico">🎉</div><h3>Goal Celebrations</h3><p>Sapna poora hone pe confetti ke saath celebrate karo.</p></div>
+            <div class="feat-card"><div class="ico">🔐</div><h3>Secure &amp; Synced</h3><p>Firebase backend — data 100% safe aur synced.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+    <h2 class="section-title">Ready to track<br><span class="gradient-text">like a Pro?</span></h2>
+    <a href="https://github.com/sadaf06/Apna-hisaab/releases/tag/Download" target="_blank" class="cta-btn" id="ctaDownload">Download Apna Hisaab 🚀</a>
+</section>
+
+<footer>Made with ❤️ by Sadaf Siddiqui</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// Prevent pinned-section bleed-through: recalc pin offsets once layout/fonts fully settle
+ScrollTrigger.config({ ignoreMobileResize:true });
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(()=> ScrollTrigger.refresh());
+}
+window.addEventListener('load', ()=> ScrollTrigger.refresh());
+
+// Cursor glow
+const glow = document.getElementById('cursorGlow');
+window.addEventListener('mousemove', e=>{ glow.style.left = e.clientX+'px'; glow.style.top = e.clientY+'px'; });
+
+// Tilt on feature cards
+document.querySelectorAll('.feat-card').forEach(card=>{
+    card.addEventListener('mousemove', e=>{
+        const r = card.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        const rx = ((y/r.height)-0.5) * -6, ry = ((x/r.width)-0.5) * 6;
+        card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform=''; });
+});
+
+// --- HERO ---
+gsap.to(".hero-pre", { opacity:1, y:0, duration:.8, delay:.2 });
+gsap.to(".hero-sub", { opacity:1, y:0, duration:.8, delay:.4 });
+gsap.to(".hero-ctas", { opacity:1, y:0, duration:.8, delay:.6 });
+gsap.to("#trustRow", { opacity:1, duration:.8, delay:.8 });
+
+gsap.to("#masked-bg", { opacity:1, backgroundPosition:"0% 0%", ease:"none",
+    scrollTrigger:{ trigger:"#hero", start:"top top", end:"bottom top", scrub:1 } });
+gsap.to(".masked-text-wrapper", { scale:.9, y:-50, ease:"none",
+    scrollTrigger:{ trigger:"#hero", start:"top top", end:"bottom top", scrub:1 } });
+
+// --- PHONE 1: AAJ ---
+const text1 = "6000 ka rent pay kar diya gaya!";
+const el1 = document.getElementById('typed-text-1');
+text1.split("").forEach(c=>{ let s=document.createElement("span"); s.innerText=c; s.style.opacity=0; el1.appendChild(s); });
+const chars1 = el1.querySelectorAll("span");
+let counter = { val:0 };
+
+const isMobile = window.innerWidth < 769;
+const scrollLen1 = isMobile ? 1400 : 2000;
+const scrollLen2 = isMobile ? 1100 : 1500;
+const scrollLen3 = isMobile ? 1300 : 1800;
+
+let tl1 = gsap.timeline({ scrollTrigger:{ trigger:"#wrapper-aaj", start:"top top", end:"+="+scrollLen1, scrub:1, pin:"#section-aaj" }});
+tl1.to("#greeting-text", { innerText:"Hisaab ho gaya! ✅", duration:.1 })
+   .to(chars1, { opacity:1, stagger:.03, duration:.1, ease:"steps(1)" }, "-=0.1")
+   .to(counter, { val:6000, duration:.4, ease:"power2.out", onUpdate:()=>document.getElementById("amount-count").innerText = Math.floor(counter.val) }, "-=0.3")
+   .to("#add-btn-1", { opacity:1, scale:1, duration:.2, ease:"back.out(1.7)" }, "-=0.2")
+   .to("#add-btn-1", { scale:.95, duration:.1, yoyo:true, repeat:1 })
+   .to("#t-1", { opacity:1, y:0, duration:.3 }, "-=0.1");
+
+// --- PHONE 2: KAHANI ---
+let tl2 = gsap.timeline({ scrollTrigger:{ trigger:"#wrapper-kahani", start:"top top", end:"+="+scrollLen2, scrub:1, pin:"#section-kahani" }});
+tl2.to("#p-rent", { width:"84%", duration:.4, ease:"power2.out" })
+   .to("#p-per", { width:"15%", duration:.3, ease:"power2.out" }, "-=0.2")
+   .to(".mood-dot", { opacity:1, scale:1, duration:.2, stagger:.05, ease:"back.out(1.7)" }, "-=0.2")
+   .to("#gen-btn", { opacity:1, y:0, duration:.2 })
+   .to("#gen-status", { innerText:"Done ✅", color:"#4ade80", duration:.1 });
+
+// --- PHONE 3: SAPNA (ring fill + confetti burst) ---
+function fireConfetti(canvasEl, originXRatio=0.5, originYRatio=0.35){
+    const ctx = canvasEl.getContext('2d');
+    canvasEl.width = canvasEl.offsetWidth; canvasEl.height = canvasEl.offsetHeight;
+    const colors = ['#8b6cff','#2dd8c4','#ffb454','#ff5d7a','#f2eefc'];
+    const ox = canvasEl.width*originXRatio, oy = canvasEl.height*originYRatio;
+    const particles = Array.from({length:50}, ()=>({
+        x:ox, y:oy, vx:(Math.random()-0.5)*10, vy:(Math.random()*-10)-3,
+        size:3+Math.random()*5, color:colors[Math.floor(Math.random()*colors.length)],
+        rot:Math.random()*360, vr:(Math.random()-0.5)*18, life:100
+    }));
+    function frame(){
+        ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
+        let alive=false;
+        particles.forEach(p=>{
+            if(p.life<=0) return; alive=true;
+            p.x+=p.vx; p.y+=p.vy; p.vy+=0.45; p.rot+=p.vr; p.life-=1.8;
+            ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+            ctx.globalAlpha = Math.max(p.life/100,0); ctx.fillStyle=p.color;
+            ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); ctx.restore();
+        });
+        if(alive) requestAnimationFrame(frame); else ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
+    }
+    frame();
+}
+
+let tl3 = gsap.timeline({ scrollTrigger:{ trigger:"#wrapper-sapna", start:"top top", end:"+="+scrollLen3, scrub:1, pin:"#section-sapna" }});
+let ringObj = { pct:0 };
+tl3.to(ringObj, {
+        pct:100, duration:.5, ease:"power2.out",
+        onUpdate:()=>{
+            document.getElementById('ringPct').innerText = Math.floor(ringObj.pct)+'%';
+            document.getElementById('ringFill').style.strokeDashoffset = 314 - (314*ringObj.pct/100);
+        }
+    })
+   .to("#celebrateBadge", { opacity:1, scale:1, duration:.3, ease:"back.out(2)",
+        onStart:()=> fireConfetti(document.getElementById('sapnaConfetti'), 0.5, 0.15) })
+   .to("#mg-1", { opacity:1, y:0, duration:.25 }, "-=0.1")
+   .to("#mg-2", { opacity:1, y:0, duration:.25 }, "-=0.1");
+
+// --- FEATURE CARDS ---
+gsap.utils.toArray('.feat-card').forEach((card,i)=>{
+    gsap.to(card, { opacity:1, y:0, duration:.5, scrollTrigger:{ trigger:card, start:"top 90%" }, delay:(i%3)*0.08 });
+});
+
+// --- OVERVIEW CARDS (full app feature list) ---
+gsap.set('.ov-card', { opacity:0, y:24 });
+gsap.utils.toArray('.ov-card').forEach((card,i)=>{
+    gsap.to(card, { opacity:1, y:0, duration:.5, ease:"power2.out", scrollTrigger:{ trigger:card, start:"top 92%" }, delay:(i%3)*0.06 });
+});
+
+// --- CTA ---
+gsap.to(".cta-btn", { opacity:1, scale:1, duration:.8, ease:"back.out(1.7)", scrollTrigger:{ trigger:".cta-btn", start:"top 90%" } });
+
+// --- Global confetti burst on download clicks ---
+const globalCanvas = document.getElementById('globalConfetti');
+const gctx = globalCanvas.getContext('2d');
+function resizeGlobal(){ globalCanvas.width=innerWidth; globalCanvas.height=innerHeight; }
+resizeGlobal(); window.addEventListener('resize', resizeGlobal);
+function burstAt(x,y){
+    const colors=['#8b6cff','#2dd8c4','#ffb454','#ff5d7a','#f2eefc'];
+    const particles = Array.from({length:70},()=>({
+        x,y, vx:(Math.random()-0.5)*14, vy:(Math.random()*-14)-4,
+        size:4+Math.random()*6, color:colors[Math.floor(Math.random()*colors.length)],
+        rot:Math.random()*360, vr:(Math.random()-0.5)*20, life:100
+    }));
+    function frame(){
+        gctx.clearRect(0,0,globalCanvas.width,globalCanvas.height);
+        let alive=false;
+        particles.forEach(p=>{
+            if(p.life<=0) return; alive=true;
+            p.x+=p.vx; p.y+=p.vy; p.vy+=0.5; p.rot+=p.vr; p.life-=1.6;
+            gctx.save(); gctx.translate(p.x,p.y); gctx.rotate(p.rot*Math.PI/180);
+            gctx.globalAlpha=Math.max(p.life/100,0); gctx.fillStyle=p.color;
+            gctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); gctx.restore();
+        });
+        if(alive) requestAnimationFrame(frame); else gctx.clearRect(0,0,globalCanvas.width,globalCanvas.height);
+    }
+    frame();
+}
+['heroDownload','ctaDownload','navDownload'].forEach(id=>{
+    const btn = document.getElementById(id);
+    if(btn) btn.addEventListener('click', e=> burstAt(e.clientX, e.clientY));
+});
+</script>
+</body>
+</html>
