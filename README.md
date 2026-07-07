@@ -5,7 +5,7 @@
 Apna Hisaab ek Hinglish-first Android expense tracker hai jo natural language se kharcha samajhta hai — bas type karo *"200 ki chai piya"* ya *"1000 bachaye is mahine"*, aur AI khud parse karke sahi jagah entry daal deta hai. Sirf paise ka hisaab nahi — apna mood bhi track karo aur har mahine ki apni kahani padho.
 
 ---
-
+______________
 ## ✨ Features
 
 - **🗣️ Natural Language Parsing** — Hinglish/Hindi/English mix mein likho, AI (Gemini) khud amount, category, aur intent nikal leta hai.
